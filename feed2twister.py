@@ -46,6 +46,11 @@ logging.basicConfig(level=log_level)
 # url shorteners
 shortener = str(main_config.get('use_shortener', 'false')).lower()
 
+def shorten_twister(url):
+    next_k = get_next_k(twister, main_config['username'])
+    res = twister.newshorturl(main_config['username'], next_k, url)[0]
+    return res
+
 # is.gd is the default (for historical reasons, but they're tor-user hostile :( )
 if shortener in ['isgd', 'is.gd', 'gd', 'true', 'yes', 'y', '1']:
     import gdshortener
@@ -58,6 +63,8 @@ elif shortener in ['v', 'vgd', 'v.gd']:
 elif shortener in ['ur1', 'ur1.ca', 'ur1ca']:
     import ur1
     shorten = lambda url: ur1.shorten(url)
+elif shortener == 'twister':
+    shorten = shorten_twister
 elif shortener in ['user_shortener', 'user']:
     from user_shortener import shorten  # User should create user_shortener.py
 elif shortener in ['false', 'no', 'n', '0']:
@@ -91,6 +98,7 @@ def get_next_k(twister,username):
 
 def main(max_items):
     db = anydbm.open(os.path.expanduser(main_config['db_filename']),'c')
+    global twister
     twister = AuthServiceProxy(main_config['rpc_url'])
 
     for feed_url in get_array_conf_option('feeds'):
